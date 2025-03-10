@@ -3,11 +3,13 @@ package com.example.webmovie.controller;
 import com.example.webmovie.dto.request.UpdateUseRequest;
 import com.example.webmovie.dto.request.UserRequest;
 import com.example.webmovie.dto.response.ApiResponse;
+import com.example.webmovie.dto.response.PageResponse;
 import com.example.webmovie.dto.response.UserResponse;
 import com.example.webmovie.exception.AppException;
 import com.example.webmovie.exception.ErrorCode;
 import com.example.webmovie.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,10 +27,13 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping()
-    public ApiResponse<UserResponse> getUserByFullName(@RequestParam("fullName") String fullName) {
+    public ApiResponse<?> getUserByFullName(@RequestParam("fullName") String fullName,
+                                                       @RequestParam(defaultValue = "0", required = false) int page,
+                                                       @Min(5) @RequestParam(defaultValue = "20", required = false) int size) {
 
-        UserResponse userResponse = userService.findByFullName(fullName);
-        return ApiResponse.<UserResponse>builder()
+        PageResponse<?> userResponse = userService.findByFullName(fullName, page, size);
+
+        return ApiResponse.<PageResponse<?>>builder()
                 .status(HttpStatus.OK.value())
                 .message("Get User by full name successfully")
                 .data(userResponse)
@@ -47,11 +52,13 @@ public class UserController {
     }
 
     @GetMapping("/all")
-    public ApiResponse<List<UserResponse>> getAllUsers() {
-        List<UserResponse> userResponses = userService.findAll();
+    public ApiResponse<?> getAllUsers(@RequestParam(defaultValue = "0", required = false) int page,
+                                                       @Min(5) @RequestParam(defaultValue = "20", required = false) int size,
+                                                       @RequestParam String sortBy) {
+        PageResponse<?> userResponses = userService.findAll(page, size, sortBy);
 
 
-        return ApiResponse.<List<UserResponse>>builder()
+        return ApiResponse.<PageResponse<?>>builder()
                 .status(HttpStatus.OK.value())
                 .message("Get all users successfully")
                 .data(userResponses)
